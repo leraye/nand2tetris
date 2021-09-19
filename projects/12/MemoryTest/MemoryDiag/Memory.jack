@@ -1,0 +1,136 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+
+    static Array memory, freeList;
+
+    static int HEAP_BASE, HEAP_BOTTOM;
+
+    /** Initializes the class. */
+    function void init() {
+        let memory = 0;
+
+        let HEAP_BASE = 2048;
+        let HEAP_BOTTOM = 16384;
+
+        let freeList = HEAP_BASE;
+        let freeList[0] = HEAP_BOTTOM - HEAP_BASE;
+        let freeList[1] = null;
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        return memory[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let memory[address] = value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {
+        var int requested, best;
+        var Array prevBlock, currBlock, block, prev, returnAddr;
+
+        let currBlock = freeList;
+        let prevBlock = null;
+        let prev = null;
+        let block = freeList;
+        let requested = size + 1;
+        let returnAddr = null;
+        let best = HEAP_BOTTOM - HEAP_BASE;
+
+        while(~(currBlock = null)){
+            if(~(currBlock[0] < requested)){
+                if(currBlock[0] < best){
+                    let block = currBlock;
+                    let prev = prevBlock;
+                    let best = currBlock[0];
+                }
+            }
+            let prevBlock = currBlock;
+            let currBlock = currBlock[1];
+        }
+        let best = block[0] - 2;
+        if(best > requested){
+            let block[0] = block[0] - requested;
+            let block[block[0]] = requested;
+            let returnAddr = block + block[0] + 1;
+            do Memory.remove(prev, block);
+            if(Memory.append(block)){
+                return returnAddr;
+            }
+            do Memory.insert(block);
+        }else{
+            let returnAddr = block + 1;
+            do Memory.remove(prev, block);
+        }
+        return returnAddr;
+    }
+
+    function void remove(Array prevBlock, Array currBlock){
+        if(prevBlock = null){
+            let freeList = currBlock[1];
+        }else{
+            let prevBlock[1] = currBlock[1];
+        }
+        return;
+    }
+
+    function boolean append(Array block){
+        var Array currBlock, nextBlock, prevBlock;
+
+        let currBlock = freeList;
+        let prevBlock = null;
+        while(~(currBlock = null)){
+            let nextBlock = currBlock + currBlock[0];
+            if(nextBlock = block){
+                let currBlock[0] = currBlock[0] + block[0];
+                return true;
+            }
+            let nextBlock = block + block[0];
+            if(nextBlock = currBlock){
+                let block[0] = block[0] + currBlock[0];
+                let block[1] = currBlock[1];
+                if(prevBlock = null){
+                    let freeList = block;
+                }else{
+                    let prevBlock[1] = block;
+                }
+                return true;
+            }
+            let prevBlock = currBlock;
+            let currBlock = currBlock[1];
+        }
+        return false;
+    }
+
+    function void insert(Array block){
+        if(freeList = null){
+            let freeList = block;
+        }else{
+            let block[1] = freeList[1];
+            let freeList[1] = block;
+        }
+        return;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        do Memory.insert(o - 1);
+        return;
+    }    
+}
