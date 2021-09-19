@@ -1,0 +1,29 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Computer.hdl
+
+/**
+ * The HACK computer, including CPU, ROM and RAM.
+ * When reset is 0, the program stored in the computer's ROM executes.
+ * When reset is 1, the execution of the program restarts. 
+ * Thus, to start a program's execution, reset must be pushed "up" (1)
+ * and "down" (0). From this point onward the user is at the mercy of 
+ * the software. In particular, depending on the program's code, the 
+ * screen may show some output and the user may be able to interact 
+ * with the computer via the keyboard.
+ */
+
+CHIP Computer {
+
+    IN reset;
+
+    PARTS:
+    // Put your code here:
+    CPU(inM[0..15]=data, instruction[0..15]=instr, reset=reset,
+    	outM[0..15]=output, writeM=w, addressM[0..14]=dAddr, pc[0..14]=iAddr);
+
+    ROM32K(address[0..14]=iAddr, out[0..15]=instr);
+
+    Memory(in[0..15]=output, load=w, address[0..14]=dAddr, out[0..15]=data);
+}
