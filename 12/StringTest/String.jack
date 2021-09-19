@@ -1,0 +1,164 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/String.jack
+
+/**
+ * Represents character strings. In addition for constructing and disposing
+ * strings, the class features methods for getting and setting individual
+ * characters of the string, for erasing the string's last character,
+ * for appending a character to the string's end, and more typical
+ * string-oriented operations.
+ */
+class String {
+
+    field int currLen, maxLen;
+    field Array charArray;
+
+    /** constructs a new empty string with a maximum length of maxLength
+     *  and initial length of 0. */
+    constructor String new(int maxLength) {
+        var int i, d;
+
+        let currLen = 0;
+        let maxLen = Math.max(1, maxLength);
+        let charArray = Array.new(maxLen);
+
+        return this;
+    }
+
+    /** Disposes this string. */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Returns the current length of this string. */
+    method int length() {
+        return currLen;
+    }
+
+    /** Returns the character at the j-th location of this string. */
+    method char charAt(int j) {
+        return charArray[j];
+    }
+
+    /** Sets the character at the j-th location of this string to c. */
+    method void setCharAt(int j, char c) {
+        let charArray[j] = c;
+        return;
+    }
+
+    /** Appends c to this string's end and returns this string. */
+    method String appendChar(char c) {
+        if(currLen < maxLen){
+            let charArray[currLen] = c;
+            let currLen = currLen + 1;
+        }
+
+        if(currLen < maxLen){
+            let charArray[currLen] = c;
+            let currLen = currLen + 1;
+        }
+        return this;
+    }
+
+    /** Erases the last character from this string. */
+    method void eraseLastChar() {
+        if(currLen > 0){
+            let currLen = currLen - 1;
+        }
+        return;
+    }
+
+    /** Returns the integer value of this string, 
+     *  until a non-digit character is detected. */
+    method int intValue() {
+        var int i, num, digit;
+        var boolean negative;
+        var char c;
+
+        let i = 0;
+        let negative = false;
+        if((currLen > 0) & (charAt(i) = String.negativeSign())){
+            let negative = true;
+            let i = 1;
+        }
+        while(i < currLen){
+            let c = charAt(i);
+            if(~String.isDigit(c)){
+                if(negative){
+                    return -num;
+                }
+                return num;
+            }
+            let digit = char2Int(c);
+            let num = Math.multiply(num, 10) + digit;
+            let i = i + 1;
+        }
+        if(negative){
+            return -num;
+        }
+        return num;
+    }
+
+    /** Sets this string to hold a representation of the given value. */
+    method void setInt(int val) {
+        if(maxLen = 0){
+            return;
+        }
+
+        let currLen = 0;
+        if(val < 0){
+            do appendChar(String.negativeSign());
+            let val = Math.abs(val);
+        }
+        do setIntHelper(val);
+        return;
+    }
+
+    method void setIntHelper(int val){
+        var int div, res;
+
+        if(val < 10){
+            do appendChar(digit2Char(val));
+            return;
+        }
+        let div = Math.divide(val, 10);
+        let res = val - Math.multiply(div, 10);
+        do setIntHelper(div);
+        do appendChar(digit2Char(res));
+        return;
+    }
+
+    method char digit2Char(int d){
+        return d + 48;
+    }
+
+    method int char2Int(char c){
+        return c - 48;
+    }
+
+    /** Returns the new line character. */
+    function char newLine() {
+        return 128;
+    }
+
+    /** Returns the backspace character. */
+    function char backSpace() {
+        return 129;
+    }
+
+    /** Returns the double quote (") character. */
+    function char doubleQuote() {
+        return 34;
+    }
+
+    function char negativeSign() {
+        return 45;
+    }
+
+    function boolean isDigit(char c){
+        return ~((c < 48) | (c > 57));
+    }
+}
